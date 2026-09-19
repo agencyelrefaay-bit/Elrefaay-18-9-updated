@@ -8,7 +8,11 @@ const { all, get, run, insert, transaction } = require('../db/database');
 const { authenticate, authorize } = require('../middleware/auth');
 const { logAction } = require('../utils/auditLog');
 const { generateSKU, generateBarcode } = require('../utils/codeGenerator');
-const { getProductStockRows, evaluateLowStock } = require('../utils/stockAlerts');
+const {
+  getProductStockRows,
+  getProductsStockRows,
+  evaluateLowStock,
+} = require('../utils/stockAlerts');
 const eventBus = require('../utils/eventBus');
 
 router.use(authenticate);
@@ -89,9 +93,19 @@ function validateColor({ color_preset, color_hex }) {
 // المنخفض) — منطق التقييم نفسه بقى في utils/stockAlerts.js كمصدر حقيقة وحيد
 // بدل ما يتكرر هنا وفي inventory.js بشكل منفصل.
 async function attachStockSummary(products, req) {
-  return Promise.all(products.map(async (p) => {
-    const stockRows = await getProductStockRows(p.id);
+  if (!products.length) {
+    return [];
+  }
+
+  const productIds = products.map((p) => p.id);
+
+  // Query واحدة فقط لجلب مخزون كل المنتجات
+  const stockMap = await getProductsStockRows(productIds);
+
+  return products.map((p) => {
+    const stockRows = stockMap.get(p.id) || [];
     const evaluation = evaluateLowStock(p, stockRows);
+
     return {
       ...p,
       image_path: getImageUrl(req, p.image_path),
@@ -103,8 +117,9 @@ async function attachStockSummary(products, req) {
       low_stock_mode: p.low_stock_mode || 'global',
       low_stock_locations: evaluation.low_locations,
     };
-  }));
+  });
 }
+
 
 // GET /api/products - قائمة المنتجات مع بحث وفلترة
 router.get('/', async (req, res) => {

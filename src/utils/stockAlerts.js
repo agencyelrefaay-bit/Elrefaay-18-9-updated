@@ -16,11 +16,72 @@ async function getProductStockRows(productId, locFilter = '', locParams = []) {
            COALESCE(i.quantity, 0) as quantity,
            plt.min_stock_threshold as location_threshold
     FROM locations l
-    LEFT JOIN inventory i ON i.location_id = l.id AND i.product_id = ?
-    LEFT JOIN product_location_thresholds plt ON plt.location_id = l.id AND plt.product_id = ?
+    LEFT JOIN inventory i
+      ON i.location_id = l.id
+      AND i.product_id = ?
+    LEFT JOIN product_location_thresholds plt
+      ON plt.location_id = l.id
+      AND plt.product_id = ?
     WHERE l.is_active = 1 ${locFilter}
     ORDER BY l.id
   `, [productId, productId, ...locParams]);
+}
+
+async function getProductsStockRows(productIds, locFilter = '', locParams = []) {
+  if (!Array.isArray(productIds) || productIds.length === 0) {
+    return new Map();
+  }
+
+  const placeholders = productIds.map(() => '?').join(',');
+
+  const rows = await all(`
+    SELECT
+      i.product_id,
+      l.id as location_id,
+      l.name as location_name,
+      l.type,
+      COALESCE(i.quantity, 0) as quantity,
+      plt.min_stock_threshold as location_threshold
+    FROM locations l
+    CROSS JOIN (
+      SELECT id as product_id
+      FROM products
+      WHERE id IN (${placeholders})
+    ) selected_products
+    LEFT JOIN inventory i
+      ON i.location_id = l.id
+      AND i.product_id = selected_products.product_id
+    LEFT JOIN product_location_thresholds plt
+      ON plt.location_id = l.id
+      AND plt.product_id = selected_products.product_id
+    WHERE l.is_active = 1 ${locFilter}
+    ORDER BY selected_products.product_id, l.id
+  `, [...productIds, ...locParams]);
+
+  const grouped = new Map();
+
+  for (const row of rows) {
+    if (!grouped.has(row.product_id)) {
+      grouped.set(row.product_id, []);
+    }
+
+    grouped.get(row.product_id).push({
+      location_id: row.location_id,
+      location_name: row.location_name,
+      type: row.type,
+      quantity: row.quantity,
+      location_threshold: row.location_threshold,
+    });
+  }
+
+  // ضمان وجود Array لكل منتج حتى لو لم يكن له صفوف مخزون
+  for (const productId of productIds) {
+    if (!grouped.has(productId)) {
+      grouped.set(productId, []);
+    }
+  }
+
+  return grouped;
 }
 
 // منطق التقييم نفسه — نمط واحد بيتفرّع لسلوكين:
@@ -63,25 +124,53 @@ function evaluateLowStock(product, stockRows) {
 // مشتركة يستخدمها كل من راوت /inventory/low-stock والفحص الدوري للتنبيهات
 // (src/jobs/notificationScheduler.js)، بدل تكرار نفس اللوب في المكانين.
 async function getAllLowStockProducts(locFilter = '', locParams = []) {
-  const products = await require('../db/database').all(`SELECT * FROM products WHERE is_active = 1`);
+  const products = await require('../db/database').all(
+    `SELECT * FROM products WHERE is_active = 1`
+  );
+
+  if (!products.length) {
+    return [];
+  }
+
+  const productIds = products.map((p) => p.id);
+
+  const stockMap = await getProductsStockRows(
+    productIds,
+    locFilter,
+    locParams
+  );
+
   const lowStockItems = [];
 
   for (const p of products) {
-    const stockRows = await getProductStockRows(p.id, locFilter, locParams);
+    const stockRows = stockMap.get(p.id) || [];
     const evaluation = evaluateLowStock(p, stockRows);
 
     if (evaluation.is_low_stock) {
       lowStockItems.push({
-        product_id: p.id, sku: p.sku, name: p.name, unit: p.unit,
-        image_path: p.image_path, min_stock_threshold: p.min_stock_threshold,
+        product_id: p.id,
+        sku: p.sku,
+        name: p.name,
+        unit: p.unit,
+        image_path: p.image_path,
+        min_stock_threshold: p.min_stock_threshold,
         low_stock_mode: p.low_stock_mode || 'global',
         total_quantity: evaluation.total_quantity,
         low_locations: evaluation.low_locations,
-        stock_by_location: stockRows.map(r => ({ location_name: r.location_name, quantity: r.quantity })),
+        stock_by_location: stockRows.map((r) => ({
+          location_name: r.location_name,
+          quantity: r.quantity,
+        })),
       });
     }
   }
+
   return lowStockItems;
 }
 
-module.exports = { getProductStockRows, evaluateLowStock, getAllLowStockProducts };
+module.exports = {
+  getProductStockRows,
+  getProductsStockRows,
+  evaluateLowStock,
+  getAllLowStockProducts
+};
