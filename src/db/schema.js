@@ -966,8 +966,27 @@ async function migratePerformanceIndexes() {
   console.log('✓ تم التأكد من فهارس الأداء الإضافية (Stage 5)');
 }
 
+// ─── فهارس أداء صفحة/قائمة المنتجات (Stage 6) ───
+// المصدر الحقيقي لبطء صفحة المنتجات مع تزايد عددهم (2000+): كل تحميل لقائمة
+// المنتجات بيستدعي getProductsStockRows اللي بتعمل CROSS JOIN بين كل المنتجات
+// المطلوبة وكل المخازن النشطة (products × locations) عشان تضمن ظهور كل مخزن
+// حتى لو رصيده صفر لكل منتج. مع عدم وجود index مركّب على (product_id,
+// location_id) في inventory، الـ JOIN كان بيعتمد على مسحين منفصلين بدل
+// استخدام index واحد يغطي الشرطين معاً، وده بيتفاقم كل ما عدد المنتجات زاد.
+// الإضافات هنا لا تغيّر شكل أي استجابة API ولا تحتاج أي تعديل في الواجهة —
+// فهارس فقط، آمنة 100% تتنفذ في أي وقت (CREATE INDEX IF NOT EXISTS).
+async function migrateProductListPerformanceIndexes() {
+  await run(`CREATE INDEX IF NOT EXISTS idx_inventory_product_location ON inventory(product_id, location_id);`);
+  await run(`CREATE INDEX IF NOT EXISTS idx_locations_active           ON locations(is_active);`);
+  await run(`CREATE INDEX IF NOT EXISTS idx_products_category          ON products(category_id);`);
+  await run(`CREATE INDEX IF NOT EXISTS idx_products_active            ON products(is_active);`);
+  await run(`CREATE INDEX IF NOT EXISTS idx_plt_product_location       ON product_location_thresholds(product_id, location_id);`);
+  console.log('✓ تم التأكد من فهارس أداء قائمة المنتجات (Stage 6)');
+}
+
 module.exports.createPhase4Schema = createPhase4Schema;
 module.exports.migratePerformanceIndexes = migratePerformanceIndexes;
+module.exports.migrateProductListPerformanceIndexes = migrateProductListPerformanceIndexes;
 
 // ─── جرد المخزون الفعلي (Physical Inventory Count) ───
 // جداول جديدة ومعزولة تماماً — لا تلمس products / locations / inventory /

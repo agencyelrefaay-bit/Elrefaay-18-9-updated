@@ -121,29 +121,68 @@ async function attachStockSummary(products, req) {
 }
 
 
+// يشيل أي حرف مش عربي/إنجليزي/رقم من الكود عشان "GFH-040-8-GD" و"GFH 040 8 GD"
+// و"gfh0408gd" يتطابقوا مع بعض وقت البحث، بغض النظر عن شكل الشرطات/المسافات
+// اللي اتكتب بيها الكود وقت إضافة المنتج.
+function normalizeCode(str) {
+  return String(str || '').toUpperCase().replace(/[^A-Z0-9\u0600-\u06FF]/g, '');
+}
+
 // GET /api/products - قائمة المنتجات مع بحث وفلترة
 router.get('/', async (req, res) => {
   const { search, category_id, low_stock, is_active } = req.query;
-  let sql = `SELECT p.*, c.name as category_name FROM products p LEFT JOIN categories c ON p.category_id = c.id WHERE 1=1`;
-  const params = [];
+
+  function baseSql() {
+    return `SELECT p.*, c.name as category_name FROM products p LEFT JOIN categories c ON p.category_id = c.id WHERE 1=1`;
+  }
+  function extraFilters(sql, params) {
+    if (category_id) { sql += ` AND p.category_id = ?`; params.push(category_id); }
+    if (is_active !== undefined) { sql += ` AND p.is_active = ?`; params.push(is_active === 'true' || is_active === '1' ? 1 : 0); }
+    sql += ` ORDER BY p.created_at DESC`;
+    return sql;
+  }
+
+  let products;
 
   if (search) {
+    // المسار السريع أولاً: LIKE عادي على sku/barcode/name — بيستخدم الـ index
+    // الموجود على sku وbarcode مباشرة، وده اللي بيغطي أغلب حالات البحث
+    // (الكود اتكتب بنفس الشكل المخزّن، أو بحث بالاسم).
+    let sql = baseSql();
+    const params = [];
     sql += ` AND (p.name LIKE ? OR p.sku LIKE ? OR p.barcode LIKE ?)`;
     const term = `%${search}%`;
     params.push(term, term, term);
-  }
-  if (category_id) {
-    sql += ` AND p.category_id = ?`;
-    params.push(category_id);
-  }
-  if (is_active !== undefined) {
-    sql += ` AND p.is_active = ?`;
-    params.push(is_active === 'true' || is_active === '1' ? 1 : 0);
+    sql = extraFilters(sql, params);
+    products = await all(sql, params);
+
+    // لو مفيش نتائج، ده معناه غالباً إن شكل الكود اللي اتكتب في البحث
+    // (شرطات/مسافات مختلفة) مش مطابق حرفياً لشكله في السيستم. هنا بس
+    // بنعمل البحث الموحّد (normalized) اللي بيقارن الكود بعد تنضيفه من
+    // الرموز، وده أبطأ شوية (بيقرا الجدول كله) فبنستخدمه كحل احتياطي فقط
+    // مش كل بحث، عشان محافظين على سرعة البحث العادي.
+    if (products.length === 0) {
+      const normTerm = normalizeCode(search);
+      if (normTerm) {
+        let fbSql = `
+          SELECT p.*, c.name as category_name FROM products p
+          LEFT JOIN categories c ON p.category_id = c.id
+          WHERE (
+            REPLACE(REPLACE(REPLACE(UPPER(p.sku), '-', ''), ' ', ''), '_', '') LIKE ?
+            OR REPLACE(REPLACE(REPLACE(UPPER(p.barcode), '-', ''), ' ', ''), '_', '') LIKE ?
+          )`;
+        const fbParams = [`%${normTerm}%`, `%${normTerm}%`];
+        fbSql = extraFilters(fbSql, fbParams);
+        products = await all(fbSql, fbParams);
+      }
+    }
+  } else {
+    let sql = baseSql();
+    const params = [];
+    sql = extraFilters(sql, params);
+    products = await all(sql, params);
   }
 
-  sql += ` ORDER BY p.created_at DESC`;
-
-  let products = await all(sql, params);
   products = await attachStockSummary(products, req);
 
   // فلترة نواقص المخزون (تتم بعد حساب الكمية الإجمالية)

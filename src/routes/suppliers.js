@@ -165,65 +165,231 @@ const tmpDir = path.join(__dirname,'../uploads/temp');
 if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir,{recursive:true});
 const upload = multer({ dest: tmpDir, limits: { fileSize: 10*1024*1024 } });
 
+// ═══════════════════════════════════════════════════════════════════════════
+//  استيراد الموردين — تم ترقيته لنفس منطق "المزامنة الذكية" المستخدم في
+//  استيراد المنتجات والعملاء (كان قبل كده بيضيف صف جديد دايماً حتى لو
+//  المورد موجود بالفعل، وده كان بيسبب تكرار المورد نفسه في كل رفعة ملف).
+//  نفس قرار السلامة الخاص بالرصيد الافتتاحي: بيتطبّق للمورد الجديد بس، ومش
+//  بيتلمس لمورد موجود بالفعل (الرصيد الحقيقي بييجي من أوامر الشراء والدفعات).
+// ═══════════════════════════════════════════════════════════════════════════
+function supNormText(v) {
+  if (v === null || v === undefined) return '';
+  let s = String(v).trim();
+  if (!s) return '';
+  s = s.replace(/[\u0660-\u0669]/g, (d) => String(d.charCodeAt(0) - 0x0660))
+       .replace(/[\u06F0-\u06F9]/g, (d) => String(d.charCodeAt(0) - 0x06F0));
+  s = s.replace(/[\u064B-\u0652\u0640]/g, '');
+  s = s.replace(/[أإآٱ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/ؤ/g, 'و').replace(/ئ/g, 'ي');
+  return s.replace(/\s+/g, ' ').trim().toLowerCase();
+}
+function supNormPhone(v) { return String(v || '').replace(/[^0-9]/g, ''); }
+const SUP_ALIAS = {
+  name: ['name', 'اسم', 'اسم المورد', 'supplier'],
+  code: ['code', 'كود', 'كود المورد'],
+  type: ['type', 'نوع', 'النوع'],
+  phone: ['phone', 'هاتف', 'الهاتف'],
+  phone2: ['phone2', 'هاتف 2', 'هاتف اضافي'],
+  email: ['email', 'ايميل', 'البريد الالكتروني', 'البريد الإلكتروني'],
+  city: ['city', 'مدينة', 'المدينة'],
+  address: ['address', 'عنوان', 'العنوان', 'العنوان التفصيلي'],
+  contact_person: ['contact_person', 'اسم المسؤول', 'المسؤول'],
+  contact_phone: ['contact_phone', 'هاتف المسؤول'],
+  payment_terms: ['payment_terms', 'ايام السداد', 'أيام السداد'],
+  credit_limit: ['credit_limit', 'حد الائتمان'],
+  opening_balance: ['opening_balance', 'رصيد افتتاحي', 'الرصيد الافتتاحي'],
+  notes: ['notes', 'ملاحظات'],
+};
+const SUP_ALIAS_TO_FIELD = new Map();
+Object.entries(SUP_ALIAS).forEach(([field, aliases]) => aliases.forEach((a) => SUP_ALIAS_TO_FIELD.set(supNormText(a), field)));
+function supBuildHeaderMap(headerRow) {
+  const map = {}, duplicates = [], unknown = [];
+  headerRow.forEach((raw, idx) => {
+    const text = String(raw || '').trim();
+    if (!text) return;
+    const field = SUP_ALIAS_TO_FIELD.get(supNormText(text.replace(/[_\-]+/g, ' ')));
+    if (!field) { unknown.push(text); return; }
+    if (map[field] !== undefined) { duplicates.push({ header: text, column: idx + 1 }); return; }
+    map[field] = idx;
+  });
+  return { map, duplicates, unknown };
+}
+function supCell(row, map, field) {
+  const idx = map[field];
+  if (idx === undefined) return '';
+  const v = row[idx];
+  return v === null || v === undefined ? '' : String(v).trim();
+}
+const SUP_TYPE_MAP = { company: 'company', شركة: 'company', individual: 'individual', فرد: 'individual' };
+const SUP_FIELD_LABELS = {
+  type: 'النوع', phone: 'الهاتف', phone2: 'هاتف 2', email: 'البريد الإلكتروني',
+  city: 'المدينة', address: 'العنوان', contact_person: 'اسم المسؤول', contact_phone: 'هاتف المسؤول',
+  payment_terms: 'أيام السداد', credit_limit: 'حد الائتمان', notes: 'ملاحظات',
+};
+
+router.get('/import/template', async (req, res) => {
+  const headers = ['name', 'type', 'phone', 'city', 'address', 'contact_person', 'contact_phone', 'payment_terms', 'credit_limit', 'opening_balance'];
+  const sample = [
+    ['شركة النور للإضاءة', 'شركة', '01012345678', 'القاهرة', 'مصر الجديدة، شارع الثورة', 'محمد أحمد', '01098765432', '30', '0', '5000'],
+  ];
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...sample]);
+  ws['!cols'] = headers.map((h) => ({ wch: Math.max(14, h.length + 4) }));
+  XLSX.utils.book_append_sheet(wb, ws, 'الموردون');
+  const guide = [
+    ['كيف يعمل الاستيراد؟', ''],
+    ['المطابقة', 'يتم التعرّف على المورد بالكود إن وُجد، ثم بالهاتف، ثم بالاسم'],
+    ['مورد مطابق تماماً', 'يتم تجاوزه بدون أي تعديل'],
+    ['مورد موجود ببيانات مختلفة', 'يتم تحديث الأعمدة المختلفة فقط'],
+    ['مورد جديد', 'تتم إضافته، والرصيد الافتتاحي (لو موجود) يُسجَّل له'],
+    ['الرصيد الافتتاحي لمورد موجود بالفعل', 'لا يتم تعديله أبداً من الاستيراد — الرصيد الحقيقي يُدار من أوامر الشراء والدفعات فقط'],
+  ];
+  const wsG = XLSX.utils.aoa_to_sheet(guide);
+  wsG['!cols'] = [{ wch: 30 }, { wch: 60 }];
+  XLSX.utils.book_append_sheet(wb, wsG, 'دليل الاستيراد');
+  const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+  res.setHeader('Content-Disposition', 'attachment; filename="suppliers_import_template.xlsx"');
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.send(buf);
+});
+
 router.post('/import', authorize('admin','manager'), upload.single('file'), async (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'يرجى رفع ملف Excel' });
+  if (!req.file) return res.status(400).json({ error: 'يرجى رفع ملف Excel أو CSV' });
+  const cleanup = () => { try { if (fs.existsSync(req.file.path)) fs.unlink(req.file.path, () => {}); } catch (_) {} };
   try {
     const wb = XLSX.readFile(req.file.path);
-    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '' });
-    fs.unlink(req.file.path, ()=>{});
+    const sheetName = wb.SheetNames[0];
+    if (!sheetName) { cleanup(); return res.status(400).json({ error: 'الملف لا يحتوي على أي ورقة عمل' }); }
+    const matrix = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { header: 1, defval: '', blankrows: false });
+    cleanup();
+    if (matrix.length < 2) return res.status(400).json({ error: 'الملف فارغ أو لا يحتوي على بيانات كافية' });
 
-    const results = { success: [], errors: [] };
+    const { map: colMap, duplicates, unknown } = supBuildHeaderMap(matrix[0]);
+    if (colMap.name === undefined) {
+      return res.status(400).json({ error: 'لم يتم العثور على عمود اسم المورد (name) في صف العناوين' });
+    }
+    const rows = matrix.slice(1);
+    if (rows.length > 5000) return res.status(400).json({ error: 'الملف كبير جداً (أكثر من 5000 صف)' });
+
+    const existing = await all(`SELECT * FROM suppliers`);
+    const byCode = new Map(), byPhone = new Map(), byName = new Map();
+    existing.forEach((s) => {
+      if (s.code) byCode.set(supNormText(s.code), s);
+      if (s.phone) byPhone.set(supNormPhone(s.phone), s);
+      const nk = supNormText(s.name);
+      byName.set(nk, byName.has(nk) ? 'AMBIGUOUS' : s);
+    });
+
+    const report = { created: [], updated: [], unchanged: [], errors: [], warnings: [] };
+    duplicates.forEach((d) => report.warnings.push({ row: 1, warning: `العمود رقم ${d.column} مكرر — تم تجاهله` }));
+    if (unknown.length) report.warnings.push({ row: 1, warning: `أعمدة غير معروفة تم تجاهلها: ${unknown.join(' | ')}` });
+
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
       const rowNum = i + 2;
       try {
-        const name = String(row.name || row['اسم المورد'] || '').trim();
-        if (!name) { results.errors.push({ row: rowNum, error: 'اسم المورد مطلوب' }); continue; }
-        const code = String(row.code || row['الكود'] || '').trim() || await genSupplierCode();
-        if (await get(`SELECT id FROM suppliers WHERE code=?`,[code])) {
-          results.errors.push({ row: rowNum, error: `الكود ${code} مستخدم` }); continue;
+        const name = supCell(row, colMap, 'name');
+        if (!name) { report.errors.push({ row: rowNum, error: 'اسم المورد مطلوب' }); continue; }
+        const code = supCell(row, colMap, 'code');
+        const phoneRaw = supCell(row, colMap, 'phone');
+
+        let match = null, matchedBy = null;
+        if (code) { const m = byCode.get(supNormText(code)); if (m && m !== 'AMBIGUOUS') { match = m; matchedBy = 'code'; } }
+        if (!match && phoneRaw) { const m = byPhone.get(supNormPhone(phoneRaw)); if (m) { match = m; matchedBy = 'phone'; } }
+        if (!match) {
+          const m = byName.get(supNormText(name));
+          if (m === 'AMBIGUOUS') { report.errors.push({ row: rowNum, error: `أكثر من مورد بنفس الاسم "${name}" — أضف كود أو هاتف للتفرقة` }); continue; }
+          if (m) { match = m; matchedBy = 'name'; }
         }
-        const newId = await insert(`
-          INSERT INTO suppliers (code,name,phone,email,address,city,contact_person,contact_phone,opening_balance,payment_terms)
-          VALUES (?,?,?,?,?,?,?,?,?,?)`,
-          [code, name,
-           String(row.phone||row['الهاتف']||'').trim()||null,
-           String(row.email||row['البريد']||'').trim()||null,
-           String(row.address||row['العنوان']||'').trim()||null,
-           String(row.city||row['المدينة']||'').trim()||null,
-           String(row.contact_person||row['المسؤول']||'').trim()||null,
-           String(row.contact_phone||row['هاتف المسؤول']||'').trim()||null,
-           parseFloat(row.opening_balance||row['الرصيد الافتتاحي']||0)||0,
-           parseInt(row.payment_terms||row['أيام السداد']||30)||30,
-          ]);
-        results.success.push({ row: rowNum, id: newId, code, name });
-      } catch(e) { results.errors.push({ row: rowNum, error: e.message }); }
+
+        const typeRaw = supCell(row, colMap, 'type');
+        const type = typeRaw ? (SUP_TYPE_MAP[supNormText(typeRaw)] || null) : null;
+        const fields = {
+          type, phone: phoneRaw || null, phone2: supCell(row, colMap, 'phone2') || null,
+          email: supCell(row, colMap, 'email') || null,
+          city: supCell(row, colMap, 'city') || null,
+          address: supCell(row, colMap, 'address') || null,
+          contact_person: supCell(row, colMap, 'contact_person') || null,
+          contact_phone: supCell(row, colMap, 'contact_phone') || null,
+          payment_terms: supCell(row, colMap, 'payment_terms') !== '' ? parseInt(supCell(row, colMap, 'payment_terms')) : null,
+          credit_limit: supCell(row, colMap, 'credit_limit') !== '' ? parseFloat(supCell(row, colMap, 'credit_limit')) : null,
+          notes: supCell(row, colMap, 'notes') || null,
+        };
+        const openingRaw = supCell(row, colMap, 'opening_balance');
+
+        if (!match) {
+          const supCode = code || await genSupplierCode();
+          const newId = await insert(`
+            INSERT INTO suppliers (code,name,type,phone,phone2,email,address,city,country,
+              contact_person,contact_phone,payment_terms,credit_limit,opening_balance,notes)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+            [supCode, name, fields.type || 'company', fields.phone, fields.phone2, fields.email, fields.address,
+             fields.city, 'مصر', fields.contact_person, fields.contact_phone,
+             fields.payment_terms || 30, fields.credit_limit || 0,
+             openingRaw !== '' ? (parseFloat(openingRaw) || 0) : 0, fields.notes]
+          );
+          await logAction(req.user.id, 'import_create', 'supplier', newId, { source: 'bulk_import', name });
+          report.created.push({ row: rowNum, code: supCode, name });
+        } else {
+          const changes = [];
+          const diffs = {};
+          Object.entries(fields).forEach(([f, val]) => {
+            if (val === null || val === '') return;
+            const oldVal = match[f];
+            const same = f === 'credit_limit'
+              ? Math.abs((Number(oldVal) || 0) - Number(val)) < 0.001
+              : f === 'payment_terms'
+              ? Number(oldVal || 0) === Number(val)
+              : supNormText(oldVal) === supNormText(val);
+            if (!same) {
+              diffs[f] = val;
+              changes.push({ field: f, label: SUP_FIELD_LABELS[f] || f, old: oldVal ?? '—', new: val });
+            }
+          });
+          if (openingRaw !== '' && Math.abs((Number(match.opening_balance) || 0) - (parseFloat(openingRaw) || 0)) > 0.001) {
+            report.warnings.push({ row: rowNum, warning: `تم تجاهل الرصيد الافتتاحي لمورد موجود بالفعل ("${name}") — الرصيد يُدار من أوامر الشراء والدفعات، مش من الاستيراد` });
+          }
+          if (!changes.length) {
+            report.unchanged.push({ row: rowNum, code: match.code, name: match.name, matched_by: matchedBy });
+          } else {
+            await run(`UPDATE suppliers SET
+              type=COALESCE(?,type), phone=COALESCE(?,phone), phone2=COALESCE(?,phone2), email=COALESCE(?,email),
+              address=COALESCE(?,address), city=COALESCE(?,city),
+              contact_person=COALESCE(?,contact_person), contact_phone=COALESCE(?,contact_phone),
+              payment_terms=COALESCE(?,payment_terms), credit_limit=COALESCE(?,credit_limit),
+              notes=COALESCE(?,notes), updated_at=datetime('now')
+              WHERE id=?`,
+              [diffs.type ?? null, diffs.phone ?? null, diffs.phone2 ?? null, diffs.email ?? null,
+               diffs.address ?? null, diffs.city ?? null,
+               diffs.contact_person ?? null, diffs.contact_phone ?? null,
+               diffs.payment_terms ?? null, diffs.credit_limit ?? null,
+               diffs.notes ?? null, match.id]
+            );
+            await logAction(req.user.id, 'import_update', 'supplier', match.id, { changes: changes.map(c=>c.field) });
+            report.updated.push({ row: rowNum, code: match.code, name, matched_by: matchedBy, changes });
+          }
+        }
+      } catch (err) {
+        report.errors.push({ row: rowNum, error: err.message });
+      }
     }
 
-    await logAction(req.user.id, 'bulk_import', 'supplier', null, { imported: results.success.length });
-    res.json({
-      message: `تم استيراد ${results.success.length} مورد من أصل ${rows.length}`,
-      imported: results.success.length, failed: results.errors.length,
-      success_details: results.success, error_details: results.errors,
+    await logAction(req.user.id, 'bulk_import', 'supplier', null, {
+      total_rows: rows.length, created: report.created.length, updated: report.updated.length, errors: report.errors.length,
     });
-  } catch(e) {
-    if (req.file) fs.unlink(req.file.path,()=>{});
-    res.status(500).json({ error: 'خطأ في قراءة الملف: ' + e.message });
+    res.json({
+      message: `تمت المزامنة: ${report.created.length} جديد · ${report.updated.length} مُحدَّث · ${report.unchanged.length} مطابق`,
+      total_rows: rows.length,
+      imported: report.created.length + report.updated.length + report.unchanged.length,
+      failed: report.errors.length,
+      created_details: report.created, updated_details: report.updated, unchanged_details: report.unchanged,
+      success_details: [...report.created, ...report.updated],
+      error_details: report.errors, warning_details: report.warnings,
+    });
+  } catch (err) {
+    console.error('Supplier import error:', err);
+    cleanup();
+    res.status(500).json({ error: 'حدث خطأ أثناء قراءة الملف: ' + err.message });
   }
-});
-
-// ── GET /api/suppliers/import/template ──
-router.get('/import/template', async (req, res) => {
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet([
-    ['name','code','phone','email','address','city','contact_person','contact_phone','opening_balance','payment_terms'],
-    ['شركة النور للإضاءة','','01012345678','info@alnour.com','القاهرة - مصر الجديدة','القاهرة','محمد أحمد','01098765432',5000,30],
-  ]);
-  XLSX.utils.book_append_sheet(wb, ws, 'الموردون');
-  const buf = XLSX.write(wb, { type:'buffer', bookType:'xlsx' });
-  res.setHeader('Content-Disposition','attachment; filename="suppliers_template.xlsx"');
-  res.setHeader('Content-Type','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-  res.send(buf);
 });
 
 // ── DELETE /api/suppliers/:id ──

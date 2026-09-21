@@ -28,7 +28,7 @@ const STATUS_LABELS = {
 const PAYMENT_LABELS = { cash:'نقدي', credit:'آجل', installment:'تقسيط' };
 
 function generateInvoicePdf(invoiceData, stream) {
-  const { invoice, items, payments, installments } = invoiceData;
+  const { invoice, items, payments, previousBalance, totalDueNow } = invoiceData;
 
   const doc = new PDFDocument({
     size: 'A4',
@@ -225,7 +225,7 @@ function generateInvoicePdf(invoiceData, stream) {
     doc.rect(totX, ty, totW, 22).fill('#FFF3F3');
     doc.rect(totX, ty, 3, 22).fill(RED);
     doc.font('Helvetica-Bold').fontSize(9).fillColor(RED)
-       .text('BALANCE DUE / المتبقي', totX+8, ty+7, { width:totW-88 });
+       .text('BALANCE DUE / المتبقي من هذه الفاتورة', totX+8, ty+7, { width:totW-88 });
     doc.font('Helvetica-Bold').fontSize(9).fillColor(RED)
        .text('EGP '+fmtMoney(balanceDue), totX+8, ty+7, { width:totW-8, align:'right' });
     ty += 30;
@@ -237,37 +237,27 @@ function generateInvoicePdf(invoiceData, stream) {
     ty += 30;
   }
 
-  // ═══ INSTALLMENTS (if any) ═══
-  if (installments && installments.length > 0) {
-    const instY = Math.max(ty + 20, rowY + 10);
-    doc.font('Helvetica-Bold').fontSize(8).fillColor(NAVY)
-       .text('INSTALLMENT SCHEDULE / جدول الأقساط', margin, instY);
+  // ═══ رصيد العميل السابق + الإجمالي المستحق الآن ═══
+  // بيظهر بس لو فعلاً عليه رصيد سابق (أو رصيد إجمالي مختلف عن هذه الفاتورة
+  // بس) عشان ميضايقش شكل الفاتورة لعميل نضيف مالوش تاريخ سابق.
+  if (previousBalance > 0.01) {
+    doc.font('Helvetica').fontSize(8).fillColor(GRAY)
+       .text('Previous Balance / رصيد سابق', totX, ty, { width:totW-80 });
+    doc.font('Helvetica').fontSize(8).fillColor(GRAY)
+       .text('EGP '+fmtMoney(previousBalance), totX, ty, { width:totW, align:'right' });
+    ty += 13;
 
-    let iy = instY + 14;
-    doc.rect(margin, iy, 300, 14).fill(NAVY);
-    ['#','DUE DATE / الاستحقاق','AMOUNT','PAID','STATUS'].forEach((h, i) => {
-      const xs = [margin, margin+20, margin+130, margin+210, margin+265];
-      const ws = [20,110,80,55,35];
-      doc.font('Helvetica-Bold').fontSize(7).fillColor('#FFF')
-         .text(h, xs[i]+2, iy+4, { width:ws[i]-4, align:i>1?'right':'left', lineBreak:false });
-    });
-    iy += 14;
-
-    installments.forEach((inst, i) => {
-      if (i%2===0) doc.rect(margin, iy, 300, 13).fill(LGRAY);
-      const xs = [margin, margin+20, margin+130, margin+210, margin+265];
-      const ws = [20,110,80,55,35];
-      const sColor = inst.status==='paid'?GREEN:inst.status==='overdue'?RED:DARK;
-      [i+1, inst.due_date, 'EGP '+fmtMoney(inst.amount),
-       'EGP '+fmtMoney(inst.paid_amount),
-       {pending:'منتظر',partial:'جزئي',paid:'مدفوع',overdue:'متأخر'}[inst.status]||inst.status
-      ].forEach((val, ci) => {
-        doc.font('Helvetica').fontSize(7).fillColor(ci===4?sColor:DARK)
-           .text(String(val), xs[ci]+2, iy+4, { width:ws[ci]-4, align:ci>1?'right':'left', lineBreak:false });
-      });
-      iy += 13;
-    });
+    doc.rect(totX, ty, totW, 24).fill('#FFF8E8');
+    doc.rect(totX, ty, 3, 24).fill(GOLD);
+    doc.font('Helvetica-Bold').fontSize(9).fillColor(NAVY)
+       .text('TOTAL DUE NOW / إجمالي المستحق على العميل', totX+8, ty+4, { width:totW-8 });
+    doc.font('Helvetica-Bold').fontSize(9).fillColor(NAVY)
+       .text('EGP '+fmtMoney(totalDueNow), totX+8, ty+14, { width:totW-8, align:'right' });
+    ty += 32;
   }
+
+  // ملحوظة: جدول الأقساط لم يعد يُطبع على الفاتورة بناءً على الطلب — يبقى
+  // مسجّلاً في السيستم ومتاحاً في قسم "أقساط العملاء" فقط، بدون طباعة.
 
   // ═══ NOTES ═══
   const notesY = pageH - 100;

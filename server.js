@@ -11,11 +11,12 @@ require('express-async-errors');
 const cors = require('cors');
 const path = require('path');
 const helmet = require('helmet');
+const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const logger = require('./src/utils/logger');
 
 const { initDatabase } = require('./src/db/database');
-const { createSchema, seedInitialData, createProcurementSchema, migrateProcurementSchema, migrateInventoryAlertsSchema, migratePurchasingSchema, migrateCollectionSchema, migrateNotificationsSchema, migrateReturnsSchema, createSalesSchema, createPhase4Schema, migratePerformanceIndexes, migrateInventoryCountSchema, migrateProductAttributesSchema } = require('./src/db/schema');
+const { createSchema, seedInitialData, createProcurementSchema, migrateProcurementSchema, migrateInventoryAlertsSchema, migratePurchasingSchema, migrateCollectionSchema, migrateNotificationsSchema, migrateReturnsSchema, createSalesSchema, createPhase4Schema, migratePerformanceIndexes, migrateProductListPerformanceIndexes, migrateInventoryCountSchema, migrateProductAttributesSchema } = require('./src/db/schema');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -34,6 +35,13 @@ app.set('trust proxy', 1);
 // الافتراضي هيبلوك الصفحة كلها. تفعيل CSP صح محتاج فصل الـ inline scripts
 // لملفات خارجية الأول — موصى بيه كخطوة لاحقة، مش في نطاق هذا الفيكس.
 app.use(helmet({ contentSecurityPolicy: false }));
+
+// أداء: ضغط استجابات الـ API (gzip) قبل إرسالها للمتصفح. مهم بشكل خاص هنا
+// لأن قائمة المنتجات بترجع JSON كبير (كل المنتجات + بيانات المخزون لكل
+// واحد)، والضغط بيقلل حجم البيانات المنقولة فعلياً بنسبة كبيرة (نص لتلت
+// الحجم الأصلي غالباً مع بيانات JSON متكررة النمط زي دي) من غير أي تعديل
+// مطلوب في الواجهة — المتصفح بيفك الضغط تلقائياً وشفافية تامة.
+app.use(compression());
 
 // أمان: حد عام لكل طلبات الـ API لمنع الإغراق (DoS بسيط) أو الاستخدام الآلي المفرط
 const apiLimiter = rateLimit({
@@ -194,6 +202,7 @@ async function startServer() {
     await migrateNotificationsSchema();
     await migrateReturnsSchema();
     await migratePerformanceIndexes();
+    await migrateProductListPerformanceIndexes();
     await migrateInventoryCountSchema();
     await migrateProductAttributesSchema();
     await seedInitialData();

@@ -4,6 +4,7 @@ const router   = express.Router();
 const { get, all } = require('../db/database');
 const { authenticate } = require('../middleware/auth');
 const { generateInvoicePdf, generateThermalPdf } = require('../utils/invoicePdf');
+const { getCustomerBalance } = require('../utils/customerLedger');
 
 router.use(authenticate);
 
@@ -20,8 +21,23 @@ async function getInvoiceFullData(id) {
   if (!invoice) return null;
   const items    = await all(`SELECT ii.*, p.name as product_name, p.sku, p.unit FROM invoice_items ii JOIN products p ON ii.product_id=p.id WHERE ii.invoice_id=?`,[id]);
   const payments = await all(`SELECT * FROM customer_payments WHERE invoice_id=? ORDER BY payment_date`,[id]);
+  // ملحوظة: أقساط الفاتورة (customer_installments) لسه بتترفع وبتتستخدم في
+  // قسم "أقساط العملاء" وباقي السيستم كالمعتاد — بس مبقتش بتتطبع في نسخة
+  // الفاتورة النهائية (PDF)، حسب المطلوب. سايبينها هنا في البيانات المرجعة
+  // لأي استخدام مستقبلي، وبس مش بنبعتها لدالة توليد الـ PDF تحت.
   const installs = await all(`SELECT * FROM customer_installments WHERE invoice_id=? ORDER BY installment_number`,[id]);
-  return { invoice, items, payments, installments: installs };
+
+  // ─── رصيد العميل السابق (قبل هذه الفاتورة) ───
+  // getCustomerBalance بترجع الرصيد الكلي الحالي للعميل (شامل هذه الفاتورة
+  // لأنها بالفعل محفوظة). نطرح مساهمة هذه الفاتورة بالذات (المتبقي منها)
+  // عشان نوصل لرصيد العميل *قبل* الفاتورة دي، ونعرض على الفاتورة:
+  //   الرصيد السابق + مستحق هذه الفاتورة = إجمالي المستحق الآن
+  const ledger = await getCustomerBalance(invoice.customer_id);
+  const thisInvoiceDue = (invoice.total || 0) - (invoice.paid_amount || 0);
+  const previousBalance = ledger ? Math.max(0, (ledger.balance || 0) - thisInvoiceDue) : 0;
+  const totalDueNow = ledger ? (ledger.balance || 0) : thisInvoiceDue;
+
+  return { invoice, items, payments, installments: installs, previousBalance, totalDueNow };
 }
 
 // GET /api/invoices/:id/pdf  — A4

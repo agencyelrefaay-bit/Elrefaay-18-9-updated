@@ -2308,6 +2308,12 @@ table.rdv-compact-table tbody td { padding: 11px var(--s-sm); font-size: 0.82rem
 .loc-opt-avail.bad { color: var(--danger);  background: var(--danger-bg); }
 .line-loc-warn { font-size: 0.68rem; color: var(--danger); margin-top: 3px; }
 
+/* ── Product picker (بحث المنتج) — نفس بنية .loc-picker بالظبط لثبات الشكل،
+   وبس بيضيف صندوق بحث فوق قائمة النتائج عشان تنفع مع مئات المنتجات ── */
+.prod-picker-search { padding: 8px; border-bottom: 0.5px solid var(--overlay-06); position: sticky; top: 0; background: var(--ink-3); }
+.prod-picker-search .form-control { min-height: 34px; padding: 7px 10px; font-size: 0.82rem; }
+.prod-picker-menu.loc-picker-menu { max-height: 280px; }
+
 /* ── Draft invoice action bar (edit/cancel) inside detail modal ── */
 .draft-edit-banner {
   margin-top: var(--s-md); padding: 10px 14px; border-radius: var(--r-md);
@@ -2717,7 +2723,7 @@ table.rdv-compact-table tbody td { padding: 11px var(--s-sm); font-size: 0.82rem
         <div class="page-header">
           <div>
             <div class="page-title">المخزون</div>
-            <div class="page-subtitle">إدارة الكميات عبر المستودعات وصالات العرض</div>
+            <div class="page-subtitle">إدارة الكميات عبر المخازن وصالات العرض</div>
           </div>
           <div class="flex gap-sm">
             <button class="btn btn-ghost btn-sm" onclick="openAdjustModal()">
@@ -2766,7 +2772,7 @@ table.rdv-compact-table tbody td { padding: 11px var(--s-sm); font-size: 0.82rem
         <div class="page-header">
           <div>
             <div class="page-title">التحويلات</div>
-            <div class="page-subtitle">تحويل المخزون بين المستودعات وصالات العرض</div>
+            <div class="page-subtitle">تحويل المخزون بين المخازن وصالات العرض</div>
           </div>
           <button class="btn btn-primary btn-sm" onclick="openTransferModal()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -2798,7 +2804,7 @@ table.rdv-compact-table tbody td { padding: 11px var(--s-sm); font-size: 0.82rem
         <div class="page-header">
           <div>
             <div class="page-title">المواقع</div>
-            <div class="page-subtitle">المستودعات وصالات العرض</div>
+            <div class="page-subtitle">المخازن وصالات العرض</div>
           </div>
           <button class="btn btn-primary btn-sm" onclick="openLocationModal()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -4078,7 +4084,7 @@ table.rdv-compact-table tbody td { padding: 11px var(--s-sm); font-size: 0.82rem
         <select class="form-control" id="adjLocation">
           <option value="">اختر موقعاً...</option>
         </select>
-        <span class="field-hint">الموقع اللي هيتم التعديل على مخزونه (مستودع أو صالة عرض).</span>
+        <span class="field-hint">الموقع اللي هيتم التعديل على مخزونه (مخزن أو صالة عرض).</span>
       </div>
       <div class="form-row">
         <div class="form-group">
@@ -4119,15 +4125,15 @@ table.rdv-compact-table tbody td { padding: 11px var(--s-sm); font-size: 0.82rem
       <input type="hidden" id="locId"/>
       <div class="form-group">
         <label class="form-label">اسم الموقع *</label>
-        <input type="text" class="form-control" id="locName" placeholder="مثال: المستودع الخامس"/>
+        <input type="text" class="form-control" id="locName" placeholder="مثال: المخزن الخامس"/>
       </div>
       <div class="form-group">
         <label class="form-label">النوع</label>
         <select class="form-control" id="locType">
-          <option value="warehouse">مستودع</option>
+          <option value="warehouse">مخزن</option>
           <option value="showroom">صالة عرض</option>
         </select>
-        <span class="field-hint">"مستودع" للتخزين فقط، "صالة عرض" للمواقع اللي بيتم البيع منها مباشرة.</span>
+        <span class="field-hint">"مخزن" للتخزين فقط، "صالة عرض" للمواقع اللي بيتم البيع منها مباشرة.</span>
       </div>
       <div class="form-group">
         <label class="form-label">العنوان</label>
@@ -4197,7 +4203,7 @@ table.rdv-compact-table tbody td { padding: 11px var(--s-sm); font-size: 0.82rem
         <div class="form-group">
           <label class="form-label">الدور</label>
           <select class="form-control" id="uRole" onchange="onUserRoleChange()">
-            <option value="warehouse">مستودع</option>
+            <option value="warehouse">مخزن</option>
             <option value="sales">مبيعات</option>
             <option value="manager">مدير</option>
             <option value="admin">مسؤول النظام</option>
@@ -4210,7 +4216,7 @@ table.rdv-compact-table tbody td { padding: 11px var(--s-sm); font-size: 0.82rem
       <div id="uLocPermsSection" style="margin-top:14px;padding:14px 16px;background:var(--surface-2);border-radius:8px;border:1px solid var(--border);">
         <div style="font-size:0.82rem;font-weight:700;color:var(--cream-1);margin-bottom:10px;display:flex;align-items:center;gap:8px;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          صلاحيات المواقع والمستودعات
+          صلاحيات المواقع والمخازن
         </div>
         <!-- نوع الصلاحية: الكل أو محدد -->
         <div style="display:flex;gap:16px;margin-bottom:12px;">
@@ -4231,7 +4237,7 @@ table.rdv-compact-table tbody td { padding: 11px var(--s-sm); font-size: 0.82rem
           <span class="field-hint" style="margin-top:6px;display:block;">المستخدم ميشوفش أي شيء عن المواقع التانية — مخزون، فواتير، تقارير — أي حاجة خارج المواقع المحددة هنا.</span>
         </div>
         <div id="uLocAllNote" style="font-size:0.78rem;color:var(--muted);margin-top:4px;">
-          المستخدم هيشوف ويتعامل مع كل المستودعات وصالات العرض بدون قيود.
+          المستخدم هيشوف ويتعامل مع كل المخازن وصالات العرض بدون قيود.
         </div>
       </div>
 
@@ -4262,21 +4268,13 @@ table.rdv-compact-table tbody td { padding: 11px var(--s-sm); font-size: 0.82rem
     </div>
     <div class="modal-body">
       <input type="hidden" id="smId"/>
+      <!-- كود المورد بيتولّد تلقائياً في الخلفية ومش محتاج يظهر أو يتختار وقت
+           الإضافة (زي ما اتطلب) — لسه موجود كحقل مخفي لو احتجناه لاحقاً. -->
+      <input type="hidden" id="smCode"/>
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">اسم المورد *</label>
           <input type="text" class="form-control" id="smName" placeholder="اسم الشركة أو المورد"/>
-        </div>
-        <div class="form-group">
-          <label class="form-label">الاسم بالإنجليزية</label>
-          <input type="text" class="form-control" id="smNameEn" dir="ltr" placeholder="Supplier name in English"/>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">كود المورد</label>
-          <input type="text" class="form-control" id="smCode" dir="ltr" placeholder="يُولَّد تلقائياً"/>
-          <span class="field-hint">كود داخلي لتمييز المورد في التقارير والمستندات. اتركه فاضي والنظام يولّده.</span>
         </div>
         <div class="form-group">
           <label class="form-label">النوع</label>
@@ -4292,16 +4290,6 @@ table.rdv-compact-table tbody td { padding: 11px var(--s-sm); font-size: 0.82rem
           <input type="text" class="form-control" id="smPhone" dir="ltr" placeholder="01xxxxxxxxx"/>
         </div>
         <div class="form-group">
-          <label class="form-label">هاتف 2</label>
-          <input type="text" class="form-control" id="smPhone2" dir="ltr" placeholder="اختياري"/>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">البريد الإلكتروني</label>
-          <input type="email" class="form-control" id="smEmail" dir="ltr" placeholder="email@example.com"/>
-        </div>
-        <div class="form-group">
           <label class="form-label">المدينة</label>
           <input type="text" class="form-control" id="smCity" placeholder="القاهرة"/>
         </div>
@@ -4312,42 +4300,61 @@ table.rdv-compact-table tbody td { padding: 11px var(--s-sm); font-size: 0.82rem
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">اسم المسؤول</label>
-          <input type="text" class="form-control" id="smContact" placeholder="الشخص المسؤول"/>
-          <span class="field-hint">الشخص اللي بتتواصل معاه في المورد عند الطلب أو التوريد.</span>
-        </div>
-        <div class="form-group">
-          <label class="form-label">هاتف المسؤول</label>
-          <input type="text" class="form-control" id="smContactPhone" dir="ltr" placeholder="01xxxxxxxxx"/>
-        </div>
-      </div>
-      <div class="form-row-3">
-        <div class="form-group">
           <label class="form-label">الرصيد الافتتاحي (ج.م)</label>
           <input type="number" class="form-control" id="smOpeningBalance" min="0" step="0.01" placeholder="0"/>
           <span class="field-hint">المبلغ المستحق للمورد قبل بدء استخدام النظام. اتركه 0 لو مورد جديد.</span>
         </div>
-        <div class="form-group">
-          <label class="form-label">أيام السداد</label>
-          <input type="number" class="form-control" id="smPaymentTerms" min="0" placeholder="30"/>
-          <span class="field-hint">عدد الأيام المسموح بها لسداد الفواتير بعد تاريخ الاستلام (مهلة الائتمان).</span>
-        </div>
-        <div class="form-group">
-          <label class="form-label">حد الائتمان (ج.م)</label>
-          <input type="number" class="form-control" id="smCreditLimit" min="0" placeholder="0"/>
-          <span class="field-hint">أقصى مديونية مسموحة للمورد قبل ما النظام ينبّهك.</span>
+        <div class="form-group" style="display:flex;align-items:flex-end;">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:0.82rem;color:var(--cream-3);">
+            <input type="checkbox" id="smActive" checked style="accent-color:var(--gold-1);"/>
+            مورد نشط
+          </label>
         </div>
       </div>
       <div class="form-group">
         <label class="form-label">ملاحظات</label>
         <textarea class="form-control" id="smNotes" rows="2" placeholder="أي ملاحظات إضافية..."></textarea>
       </div>
-      <div style="display:flex;align-items:center;gap:var(--s-md);">
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:0.82rem;color:var(--cream-3);">
-          <input type="checkbox" id="smActive" checked style="accent-color:var(--gold-1);"/>
-          مورد نشط
-        </label>
-      </div>
+
+      <!-- بيانات إضافية (اختياري) — مقفولة افتراضياً، تتفتح لو محتاج أي منها -->
+      <details style="margin-top:var(--s-sm);">
+        <summary style="cursor:pointer;color:var(--cream-3);font-size:.9em;user-select:none;">+ بيانات إضافية (اختياري)</summary>
+        <div style="margin-top:var(--s-md);">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">هاتف 2</label>
+              <input type="text" class="form-control" id="smPhone2" dir="ltr" placeholder="اختياري"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">البريد الإلكتروني</label>
+              <input type="email" class="form-control" id="smEmail" dir="ltr" placeholder="email@example.com"/>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">اسم المسؤول</label>
+              <input type="text" class="form-control" id="smContact" placeholder="الشخص المسؤول"/>
+              <span class="field-hint">الشخص اللي بتتواصل معاه في المورد عند الطلب أو التوريد.</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">هاتف المسؤول</label>
+              <input type="text" class="form-control" id="smContactPhone" dir="ltr" placeholder="01xxxxxxxxx"/>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">أيام السداد</label>
+              <input type="number" class="form-control" id="smPaymentTerms" min="0" placeholder="30"/>
+              <span class="field-hint">عدد الأيام المسموح بها لسداد الفواتير بعد تاريخ الاستلام (مهلة الائتمان).</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">حد الائتمان (ج.م)</label>
+              <input type="number" class="form-control" id="smCreditLimit" min="0" placeholder="0"/>
+              <span class="field-hint">أقصى مديونية مسموحة للمورد قبل ما النظام ينبّهك.</span>
+            </div>
+          </div>
+        </div>
+      </details>
     </div>
     <div class="modal-footer">
       <button class="btn btn-subtle btn-sm" onclick="closeModal('supplierModal')">إلغاء</button>
@@ -4867,7 +4874,7 @@ function initApp() {
     const initial = u.full_name ? u.full_name.charAt(0) : 'م';
     document.getElementById('sidebarAvatar').textContent = initial;
     document.getElementById('sidebarUserName').textContent = u.full_name;
-    const roleNames = { admin: 'مسؤول النظام', manager: 'مدير', sales: 'مبيعات', warehouse: 'مستودع' };
+    const roleNames = { admin: 'مسؤول النظام', manager: 'مدير', sales: 'مبيعات', warehouse: 'مخزن' };
     document.getElementById('sidebarUserRole').textContent = roleNames[u.role] || u.role;
     document.getElementById('topbarUser').textContent = `${u.full_name} · ${roleNames[u.role] || u.role}`;
     // نفس بيانات المستخدم في الـ drawer (تابلت portrait)
@@ -5331,10 +5338,10 @@ function navigate(page, entity = null) {
   const titles = {
     dashboard: ['لوحة التحكم', 'نظرة عامة شاملة على المخزون والأداء'],
     products: ['المنتجات', 'إدارة كتالوج النجف والإضاءة'],
-    inventory: ['المخزون', 'الكميات عبر المستودعات وصالات العرض'],
+    inventory: ['المخزون', 'الكميات عبر المخازن وصالات العرض'],
     transfers: ['التحويلات', 'سجل حركات التحويل بين المواقع'],
-    locations: ['المواقع', 'المستودعات وصالات العرض'],
-    'inventory-count': ['جرد المخزون', 'جرد فعلي دوري للمخزون عبر المستودعات'],
+    locations: ['المواقع', 'المخازن وصالات العرض'],
+    'inventory-count': ['جرد المخزون', 'جرد فعلي دوري للمخزون عبر المخازن'],
     'account-statement': ['كشف حساب', 'كشف حساب تفصيلي بالحركات والرصيد الجاري'],
     categories: ['التصنيفات', 'تنظيم منتجاتك في فئات'],
     users: ['المستخدمون', 'إدارة حسابات الوصول والصلاحيات'],
@@ -6242,7 +6249,7 @@ async function renderInventoryCountHome() {
       </div>
     </div>
     <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--s-md);">
-      ${cards || '<div style="color:var(--cream-4);">لا يوجد مستودعات نشطة</div>'}
+      ${cards || '<div style="color:var(--cream-4);">لا يوجد مخازن نشطة</div>'}
     </div>
     ${pastSessionsHtml}
   `;
@@ -6865,7 +6872,7 @@ function renderLocations() {
   grid.innerHTML = state.locations.map(l => `
     <div class="card" style="padding:var(--s-lg); cursor:pointer;" onclick="editLocation(${l.id})">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--s-sm);">
-        <span class="badge ${l.type === 'showroom' ? 'badge-gold' : 'badge-info'}">${l.type === 'showroom' ? 'صالة عرض' : 'مستودع'}</span>
+        <span class="badge ${l.type === 'showroom' ? 'badge-gold' : 'badge-info'}">${l.type === 'showroom' ? 'صالة عرض' : 'مخزن'}</span>
         <span class="badge ${l.is_active ? 'badge-success' : 'badge-muted'}">${l.is_active ? 'نشط' : 'غير نشط'}</span>
       </div>
       <div style="font-family:var(--font-display);font-size:1.2rem;font-weight:600;color:var(--cream-0);">${l.name}</div>
@@ -6951,7 +6958,7 @@ async function loadInventory() {
       const locCards = Object.values(locSummary).map(l => `
         <div class="location-card ${state.selectedLocationId === l.id ? 'active' : ''}" onclick="selectInventoryLocation(${l.id})">
           <div class="location-name">${l.name}</div>
-          <span class="badge ${l.type === 'showroom' ? 'badge-gold' : 'badge-info'} location-type-badge">${l.type === 'showroom' ? 'صالة عرض' : 'مستودع'}</span>
+          <span class="badge ${l.type === 'showroom' ? 'badge-gold' : 'badge-info'} location-type-badge">${l.type === 'showroom' ? 'صالة عرض' : 'مخزن'}</span>
           <div class="location-total">${l.total.toLocaleString('ar-EG', {maximumFractionDigits:1})}</div>
           <div class="location-total-label">إجمالي المخزون</div>
         </div>
@@ -7210,7 +7217,7 @@ async function loadUsers() {
 }
 
 function renderUsers() {
-  const roleNames  = { admin:'مسؤول النظام', manager:'مدير', sales:'مبيعات', warehouse:'مستودع' };
+  const roleNames  = { admin:'مسؤول النظام', manager:'مدير', sales:'مبيعات', warehouse:'مخزن' };
   const roleBadges = { admin:'badge-gold', manager:'badge-warn', sales:'badge-info', warehouse:'badge-muted' };
   const typeIcon   = { warehouse:'🏭', showroom:'🏪', store:'🛒' };
   const tbody = document.getElementById('usersTbody');
@@ -7801,7 +7808,7 @@ RDV_PAGE_REFRESHERS['suppliers'] = renderSuppliers;
 function filterSuppliers() { renderSuppliers(); }
 
 function openSupplierModal() {
-  ['smId','smName','smNameEn','smCode','smPhone','smPhone2','smEmail','smCity','smAddress','smContact','smContactPhone','smNotes'].forEach(id => {
+  ['smId','smName','smCode','smPhone','smPhone2','smEmail','smCity','smAddress','smContact','smContactPhone','smNotes'].forEach(id => {
     const el = document.getElementById(id); if(el) el.value = '';
   });
   document.getElementById('smType').value = 'company';
@@ -7818,7 +7825,6 @@ function editSupplier(id) {
   if (!s) return;
   document.getElementById('smId').value = s.id;
   document.getElementById('smName').value = s.name || '';
-  document.getElementById('smNameEn').value = s.name_en || '';
   document.getElementById('smCode').value = s.code || '';
   document.getElementById('smType').value = s.type || 'company';
   document.getElementById('smPhone').value = s.phone || '';
@@ -7841,7 +7847,6 @@ async function saveSupplier() {
   const id = document.getElementById('smId').value;
   const body = {
     name: document.getElementById('smName').value.trim(),
-    name_en: document.getElementById('smNameEn').value.trim() || null,
     code: document.getElementById('smCode').value.trim() || null,
     type: document.getElementById('smType').value,
     phone: document.getElementById('smPhone').value.trim() || null,
@@ -8071,35 +8076,48 @@ function togglePOInstallSection() {
 
 let _poItems = [];
 
+let _poItemUid = 0;
+
 function addPOItem() {
   const list = document.getElementById('poItemsList');
   const defaultLocationId = document.getElementById('poLocation').value || '';
+  const uid = ++_poItemUid;
   const row = document.createElement('div');
-  row.style.cssText = 'display:grid;grid-template-columns:1fr 70px 90px 7% 130px 90px 32px;gap:6px;margin-bottom:6px;align-items:center;';
+  // كارت ببنية واضحة (زي بند فاتورة البيع بالظبط) بدل صف جدول ضيق — كل حقل
+  // له تسمية فوقه ومساحة كافية، مش لازق في الحقل اللي جنبه.
+  row.className = 'inv-line-card po-item-card';
   row.innerHTML = `
-    <select class="form-control" style="font-size:0.8rem;" onchange="recalcPO()">
-      <option value="">اختر منتجاً...</option>
-      ${state.products.filter(p=>p.is_active).map(p=>`<option value="${p.id}" data-cost="${p.cost_price}">${p.name}</option>`).join('')}
-    </select>
-    <input type="number" class="form-control" min="0.01" step="0.01" placeholder="1" value="1" style="font-size:0.82rem;" oninput="recalcPO()"/>
-    <input type="number" class="form-control" min="0" step="0.01" placeholder="0.00" style="font-size:0.82rem;" oninput="recalcPO()"/>
-    <input type="number" class="form-control" min="0" max="100" step="0.1" placeholder="0" value="0" style="font-size:0.82rem;" oninput="recalcPO()"/>
-    <select class="form-control po-item-location" style="font-size:0.78rem;">
-      <option value="">اختر المخزن...</option>
-      ${state.locations.filter(l=>l.is_active !== false).map(l=>`<option value="${l.id}" ${String(l.id)===String(defaultLocationId)?'selected':''}>${l.name}</option>`).join('')}
-    </select>
-    <div style="font-family:var(--font-mono);font-size:0.82rem;color:var(--gold-0);text-align:center;padding:8px 0;" class="po-line-total">0</div>
-    <button class="btn btn-icon btn-danger btn-xs" onclick="this.closest('div[style]').remove();recalcPO();">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-    </button>
-  `;
-  // Auto-fill cost price when product selected
-  row.querySelector('select').addEventListener('change', function() {
-    const opt = this.options[this.selectedIndex];
-    const cost = opt.getAttribute('data-cost');
-    if (cost) row.querySelectorAll('input')[1].value = cost;
-    recalcPO();
-  });
+    <div class="inv-line-card-top">
+      ${poProdPickerCellHtml(uid)}
+      <button type="button" class="inv-line-remove-btn" title="حذف البند" onclick="this.closest('.po-item-card').remove(); recalcPO();">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="inv-line-grid">
+      <div class="inv-line-field">
+        <label>الكمية</label>
+        <input type="number" class="form-control po-item-qty" min="0.01" step="0.01" placeholder="1" value="1" inputmode="decimal" oninput="recalcPO()"/>
+      </div>
+      <div class="inv-line-field">
+        <label>سعر التكلفة</label>
+        <input type="number" class="form-control po-item-cost" min="0" step="0.01" placeholder="0.00" inputmode="decimal" oninput="recalcPO()"/>
+      </div>
+      <div class="inv-line-field">
+        <label>خصم%</label>
+        <input type="number" class="form-control po-item-disc" min="0" max="100" step="0.1" placeholder="0" value="0" inputmode="decimal" oninput="recalcPO()"/>
+      </div>
+      <div class="inv-line-field" style="grid-column: span 2;">
+        <label>مخزن الاستلام</label>
+        <select class="form-control po-item-location">
+          <option value="">اختر المخزن...</option>
+          ${state.locations.filter(l=>l.is_active !== false).map(l=>`<option value="${l.id}" ${String(l.id)===String(defaultLocationId)?'selected':''}>${l.name}</option>`).join('')}
+        </select>
+      </div>
+      <div class="inv-line-field inv-line-field-total">
+        <label>الإجمالي</label>
+        <div class="il-total-value po-line-total">0</div>
+      </div>
+    </div>`;
   list.appendChild(row);
 }
 
@@ -8109,13 +8127,15 @@ function addPOItem() {
 let _poCurrentTotal = 0;
 
 function recalcPO() {
-  const rows = document.querySelectorAll('#poItemsList > div');
+  const rows = document.querySelectorAll('#poItemsList > .po-item-card');
   let subtotal = 0;
   rows.forEach(row => {
-    const inputs = row.querySelectorAll('input');
-    const qty  = parseFloat(inputs[0]?.value) || 0;
-    const cost = parseFloat(inputs[1]?.value) || 0;
-    const disc = parseFloat(inputs[2]?.value) || 0;
+    // بنقرا الحقول بالـ class مش بترتيبها جوه الصف — لأن صندوق البحث بتاع
+    // منتقي المنتج بقى فيه input تاني (مربع البحث)، فالاعتماد على الترتيب
+    // كان هيقرا القيمة الغلط بعد إضافة البحث.
+    const qty  = parseFloat(row.querySelector('.po-item-qty')?.value) || 0;
+    const cost = parseFloat(row.querySelector('.po-item-cost')?.value) || 0;
+    const disc = parseFloat(row.querySelector('.po-item-disc')?.value) || 0;
     const line = qty * cost * (1 - disc / 100);
     subtotal += line;
     const lineEl = row.querySelector('.po-line-total');
@@ -8226,18 +8246,15 @@ async function savePO(status) {
   const supplier_id = parseInt(document.getElementById('poSupplier').value);
   if (!supplier_id) { toast('اختر المورد أولاً', 'danger'); return; }
 
-  const rows = document.querySelectorAll('#poItemsList > div');
+  const rows = document.querySelectorAll('#poItemsList > .po-item-card');
   const items = [];
   let valid = true;
   rows.forEach(row => {
-    const sel = row.querySelector('select');
-    const inputs = row.querySelectorAll('input');
-    const locationSel = row.querySelector('.po-item-location');
-    const product_id = parseInt(sel?.value);
-    const qty = parseFloat(inputs[0]?.value);
-    const cost = parseFloat(inputs[1]?.value);
-    const disc = parseFloat(inputs[2]?.value) || 0;
-    const location_id = parseInt(locationSel?.value) || null;
+    const product_id = parseInt(row.querySelector('.po-item-product')?.value);
+    const qty = parseFloat(row.querySelector('.po-item-qty')?.value);
+    const cost = parseFloat(row.querySelector('.po-item-cost')?.value);
+    const disc = parseFloat(row.querySelector('.po-item-disc')?.value) || 0;
+    const location_id = parseInt(row.querySelector('.po-item-location')?.value) || null;
     if (!product_id || !qty || !cost || !location_id) { valid = false; return; }
     const line_total = qty * cost * (1 - disc/100);
     items.push({ product_id, qty_ordered: qty, unit_cost: cost, discount_pct: disc, line_total, location_id });
@@ -9049,7 +9066,7 @@ async function viewProductDetail(id) {
     return `
       <tr>
         <td>${l.location_name}</td>
-        <td><span class="badge ${l.type === 'showroom' ? 'badge-gold' : 'badge-info'}">${l.type === 'showroom' ? 'صالة عرض' : 'مستودع'}</span></td>
+        <td><span class="badge ${l.type === 'showroom' ? 'badge-gold' : 'badge-info'}">${l.type === 'showroom' ? 'صالة عرض' : 'مخزن'}</span></td>
         <td>
           <div style="display:flex;align-items:center;gap:8px;">
             <span style="font-family:var(--font-mono);font-weight:600;color:${barClass==='low'?'var(--danger)':'var(--cream-0)'};">${l.quantity}</span>
@@ -9194,7 +9211,11 @@ function statusBadgeInstall(s) {
 
 // ══════════ العملاء ══════════
 let _allCustomers = [];
-const CUSTOMER_TYPES = { retail:'تجزئة', wholesale:'جملة', vip:'VIP', contractor:'مقاول' };
+const CUSTOMER_TYPES = { retail:'قطاعي', wholesale:'جملة', vip:'VIP', contractor:'مقاول' };
+// نوعا العميل الأساسيان في نموذج الإضافة (جملة أعلى، قطاعي تحته) — أي عميل
+// قديم من نوع VIP/مقاول بيفضل شغال زي ما هو وبيظهر في قايمة النوع لو بتعدّل
+// عليه بالذات، لكن العميل الجديد ما بيتعرضش عليه إلا الاتنين دول بس.
+const CUSTOMER_TYPES_FORM_ORDER = ['wholesale', 'retail'];
 
 async function loadCustomers() {
   try {
@@ -9250,7 +9271,13 @@ async function openCustomerModal(id = null) {
   if (isEdit) {
     try { const d = await API.get(`/customers/${id}`); c = d.customer; } catch(e) { toast(e.message,'danger'); return; }
   }
-  const typeOpts = Object.keys(CUSTOMER_TYPES).map(t =>
+  // النوعان الأساسيان بس (جملة / قطاعي) في نموذج الإضافة. لو العميل ده بالذات
+  // متسجل بنوع تاني قديم (VIP/مقاول) وقت التعديل، بنضيف نوعه الحالي كخيار
+  // زيادة عشان التعديل ما يغيرش نوعه من غير قصد.
+  const formTypes = CUSTOMER_TYPES_FORM_ORDER.includes(c.type) || !isEdit
+    ? CUSTOMER_TYPES_FORM_ORDER
+    : [...CUSTOMER_TYPES_FORM_ORDER, c.type];
+  const typeOpts = formTypes.map(t =>
     `<option value="${t}" ${c.type===t?'selected':''}>${CUSTOMER_TYPES[t]}</option>`
   ).join('');
 
@@ -9264,27 +9291,33 @@ async function openCustomerModal(id = null) {
         <div class="modal-body">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--s-md);">
             <div class="form-group"><label class="form-label">اسم العميل *</label><input class="form-control" id="cfName" value="${c.name||''}"></div>
-            <div class="form-group"><label class="form-label">نوع العميل</label><select class="form-control" id="cfType" onchange="document.getElementById('cfDiscountHint').textContent = ['vip','wholesale'].includes(this.value) ? 'العملاء من هذا النوع غالباً ما يحصلون على خصم أعلى.' : ''">${typeOpts}</select><span class="field-hint">تجزئة / جملة / VIP / مقاول — يحدد الخصم الافتراضي والتصنيف بالتقارير.</span></div>
-            <div class="form-group"><label class="form-label">نسبة الخصم الافتراضية %</label><input class="form-control" type="number" id="cfDiscountPct" min="0" max="100" step="0.5" value="${c.discount_pct||0}"><span class="field-hint" id="cfDiscountHint">تُطبَّق تلقائياً على كل بنود أي فاتورة جديدة لهذا العميل (يمكن تعديلها لكل بند بعد ذلك).</span></div>
+            <div class="form-group"><label class="form-label">نوع العميل</label><select class="form-control" id="cfType" onchange="document.getElementById('cfDiscountHint').textContent = ['vip','wholesale'].includes(this.value) ? 'العملاء من هذا النوع غالباً ما يحصلون على خصم أعلى.' : ''">${typeOpts}</select><span class="field-hint">يحدد الخصم الافتراضي والتصنيف بالتقارير.</span></div>
             <div class="form-group"><label class="form-label">الهاتف</label><input class="form-control" id="cfPhone" value="${c.phone||''}"></div>
-            <div class="form-group"><label class="form-label">هاتف إضافي</label><input class="form-control" id="cfPhone2" value="${c.phone2||''}"></div>
-            <div class="form-group"><label class="form-label">البريد الإلكتروني</label><input class="form-control" id="cfEmail" value="${c.email||''}"></div>
-            <div class="form-group"><label class="form-label">المدينة</label><input class="form-control" id="cfCity" value="${c.city||''}"></div>
+            <div class="form-group"><label class="form-label">الرصيد الافتتاحي (ج.م)</label><input class="form-control" type="number" id="cfOpeningBalance" value="${c.opening_balance||0}" ${isEdit?'disabled':''}><span class="field-hint">رصيد العميل قبل بدء استخدام النظام (مدين أو دائن). اتركه 0 إذا كان عميلًا جديدًا.</span></div>
             <div class="form-group"><label class="form-label">المحافظة</label>
               <select class="form-control" id="cfGovernorate">
                 <option value="">— غير محدد —</option>
                 ${EGYPT_GOVERNORATES.map(g => `<option value="${g}" ${c.governorate===g?'selected':''}>${g}</option>`).join('')}
               </select>
-              <span class="field-hint">تُستخدم في تقرير التحصيل بالمحافظة.</span>
             </div>
-            <div class="form-group"><label class="form-label">المنطقة/الحي</label><input class="form-control" id="cfArea" value="${c.area||''}" placeholder="مثال: مدينة نصر"><span class="field-hint">تُستخدم في تقرير التحصيل بالمنطقة.</span></div>
-            <div class="form-group" style="grid-column:1/-1;"><label class="form-label">العنوان</label><input class="form-control" id="cfAddress" value="${c.address||''}"></div>
-            <div class="form-group"><label class="form-label">شخص التواصل</label><input class="form-control" id="cfContactPerson" value="${c.contact_person||''}"><span class="field-hint">لو العميل شركة أو مقاول، اسم الشخص المسؤول عن التواصل. (ده اللي بيظهر كـ"المسؤول" في تقرير التحصيل)</span></div>
-            <div class="form-group"><label class="form-label">الرقم الضريبي</label><input class="form-control" id="cfTaxNumber" dir="ltr" value="${c.tax_number||''}"><span class="field-hint">يظهر في الفاتورة الضريبية لو العميل شركة مسجّلة.</span></div>
-            <div class="form-group"><label class="form-label">حد الائتمان (ج.م)</label><input class="form-control" type="number" id="cfCreditLimit" value="${c.credit_limit||0}"><span class="field-hint">أقصى مديونية مسموحة للعميل قبل ما النظام ينبّهك عند البيع الآجل.</span></div>
-            <div class="form-group"><label class="form-label">أيام السداد</label><input class="form-control" type="number" id="cfPaymentTerms" min="0" value="${c.payment_terms||0}"><span class="field-hint">عدد الأيام المسموح بها لسداد فواتير الآجل بعد تاريخ الفاتورة.</span></div>
-            <div class="form-group"><label class="form-label">الرصيد الافتتاحي (ج.م)</label><input class="form-control" type="number" id="cfOpeningBalance" value="${c.opening_balance||0}" ${isEdit?'disabled':''}><span class="field-hint">رصيد العميل قبل بدء استخدام النظام (مدين أو دائن). اتركه 0 إذا كان عميلًا جديدًا.</span></div>
+            <div class="form-group"><label class="form-label">المنطقة/الحي</label><input class="form-control" id="cfArea" value="${c.area||''}" placeholder="مثال: مدينة نصر"></div>
+            <div class="form-group" style="grid-column:1/-1;"><label class="form-label">العنوان التفصيلي</label><input class="form-control" id="cfAddress" value="${c.address||''}" placeholder="اسم الشارع، رقم العقار، علامة مميزة..."></div>
             <div class="form-group" style="grid-column:1/-1;"><label class="form-label">ملاحظات</label><textarea class="form-control" id="cfNotes" rows="2">${c.notes||''}</textarea></div>
+
+            <!-- بيانات إضافية (اختياري) — مقفولة افتراضياً عشان النموذج يفضل بسيط
+                 وسريع لإضافة عميل عادي، وتتفتح بضغطة واحدة لو محتاج أي حقل منها -->
+            <details style="grid-column:1/-1;margin-top:var(--s-sm);">
+              <summary style="cursor:pointer;color:var(--text-secondary,inherit);font-size:.9em;user-select:none;">+ بيانات إضافية (اختياري)</summary>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--s-md);margin-top:var(--s-md);">
+                <div class="form-group"><label class="form-label">نسبة الخصم الافتراضية %</label><input class="form-control" type="number" id="cfDiscountPct" min="0" max="100" step="0.5" value="${c.discount_pct||0}"><span class="field-hint" id="cfDiscountHint">تُطبَّق تلقائياً على كل بنود أي فاتورة جديدة لهذا العميل (يمكن تعديلها لكل بند بعد ذلك).</span></div>
+                <div class="form-group"><label class="form-label">هاتف إضافي</label><input class="form-control" id="cfPhone2" value="${c.phone2||''}"></div>
+                <div class="form-group"><label class="form-label">البريد الإلكتروني</label><input class="form-control" id="cfEmail" value="${c.email||''}"></div>
+                <div class="form-group"><label class="form-label">شخص التواصل</label><input class="form-control" id="cfContactPerson" value="${c.contact_person||''}"><span class="field-hint">لو العميل شركة أو مقاول، اسم الشخص المسؤول عن التواصل.</span></div>
+                <div class="form-group"><label class="form-label">الرقم الضريبي</label><input class="form-control" id="cfTaxNumber" dir="ltr" value="${c.tax_number||''}"><span class="field-hint">يظهر في الفاتورة الضريبية لو العميل شركة مسجّلة.</span></div>
+                <div class="form-group"><label class="form-label">حد الائتمان (ج.م)</label><input class="form-control" type="number" id="cfCreditLimit" value="${c.credit_limit||0}"><span class="field-hint">أقصى مديونية مسموحة للعميل قبل ما النظام ينبّهك عند البيع الآجل.</span></div>
+                <div class="form-group"><label class="form-label">أيام السداد</label><input class="form-control" type="number" id="cfPaymentTerms" min="0" value="${c.payment_terms||0}"><span class="field-hint">عدد الأيام المسموح بها لسداد فواتير الآجل بعد تاريخ الفاتورة.</span></div>
+              </div>
+            </details>
           </div>
         </div>
         <div class="modal-footer">
@@ -9307,7 +9340,6 @@ async function saveCustomer(id) {
     phone: document.getElementById('cfPhone').value.trim(),
     phone2: document.getElementById('cfPhone2').value.trim(),
     email: document.getElementById('cfEmail').value.trim(),
-    city: document.getElementById('cfCity').value.trim(),
     governorate: document.getElementById('cfGovernorate').value,
     area: document.getElementById('cfArea').value.trim(),
     address: document.getElementById('cfAddress').value.trim(),
@@ -9715,6 +9747,207 @@ let _invoiceProdOptsHtml = '';
 // ── منتقي المخزن الخاص بكل بند: زرار بيفتح قائمة بكل المخازن، المتاح منها فعلاً
 //    (متوفر فيه كمية ≥ الكمية المطلوبة) قابل للاختيار، والباقي يبان بس بشارة حمراء
 //    توضح المتاح الفعلي (أو "غير متوفر" لو صفر) من غير ما يكون قابل للاختيار. ──
+// ═══ منتقي المنتج بالبحث (Product Picker) ═══
+// بديل احترافي عن <select> طويلة فيها كل المنتجات (بطيئة وصعبة الاستخدام
+// مع كتالوج كبير). نفس بنية "منتقي المخزن" فوق بالظبط (زرار + قائمة منسدلة)
+// عشان يبقى الشكل والسلوك متسقين في السيستم كله، وبيدعم البحث بالاسم أو
+// بالكود — مع تجاهل الشرطات/المسافات في الكود (نفس منطق توحيد البحث في
+// الباك إند)، فـ"GFH-040-8-GD" و"GFH 040 8 GD" بيرجّعوا نفس النتيجة.
+function _normCode(s) { return String(s||'').toUpperCase().replace(/[^A-Z0-9\u0600-\u06FF]/g, ''); }
+
+function prodPickerCellHtml(id) {
+  return `
+    <div class="loc-picker" id="prodPicker${id}">
+      <button type="button" class="form-control loc-picker-btn empty" id="prodPickerBtn${id}" onclick="toggleProdPicker(${id})">
+        <span class="lp-label" id="prodPickerLabel${id}">اختر المنتج...</span>
+        <svg class="lp-chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <input type="hidden" id="ilProd${id}" value="">
+      <div class="loc-picker-menu prod-picker-menu" id="prodPickerMenu${id}" style="display:none;">
+        <div class="prod-picker-search">
+          <input type="text" class="form-control" id="prodPickerQ${id}" placeholder="ابحث بالاسم أو الكود..." oninput="renderProdPickerMenu(${id}, this.value)" onclick="event.stopPropagation()" autocomplete="off">
+        </div>
+        <div id="prodPickerResults${id}"></div>
+      </div>
+    </div>`;
+}
+
+function toggleProdPicker(id) {
+  const menu = document.getElementById(`prodPickerMenu${id}`);
+  if (!menu) return;
+  const wasOpen = menu.style.display !== 'none';
+  closeAllProdPickers();
+  closeAllLocPickers();
+  if (!wasOpen) {
+    renderProdPickerMenu(id, '');
+    menu.style.display = 'block';
+    document.getElementById(`prodPicker${id}`)?.classList.add('open');
+    const q = document.getElementById(`prodPickerQ${id}`);
+    if (q) { q.value = ''; setTimeout(() => q.focus(), 30); }
+  }
+}
+
+function closeAllProdPickers() {
+  document.querySelectorAll('.prod-picker-menu').forEach(m => m.style.display = 'none');
+  document.querySelectorAll('#invoiceLines .loc-picker, #poItemsList .loc-picker').forEach(p => {
+    if (p.id?.startsWith('prodPicker') || p.id?.startsWith('poProdPicker')) p.classList.remove('open');
+  });
+}
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('[id^="prodPicker"]') && !e.target.closest('[id^="poProdPicker"]')) closeAllProdPickers();
+});
+
+function renderProdPickerMenu(id, query) {
+  const box = document.getElementById(`prodPickerResults${id}`);
+  if (!box) return;
+  const all = (state.products || []).filter(p => p.is_active);
+  const qRaw = (query || '').trim();
+  let matches;
+  if (!qRaw) {
+    matches = all.slice(0, 40);
+  } else {
+    const qLower = qRaw.toLowerCase();
+    const qNorm = _normCode(qRaw);
+    matches = all.filter(p =>
+      (p.name || '').toLowerCase().includes(qLower) ||
+      (qNorm && _normCode(p.sku).includes(qNorm))
+    ).slice(0, 40);
+  }
+  if (!matches.length) {
+    box.innerHTML = `<div class="loc-opt disabled"><span class="loc-opt-name">لا توجد نتائج مطابقة</span></div>`;
+    return;
+  }
+  const curId = parseInt(document.getElementById(`ilProd${id}`)?.value) || 0;
+  box.innerHTML = matches.map(p => `
+    <div class="loc-opt ${p.id===curId?'selected':''}" onclick="selectProdPickerItem(${id}, ${p.id})">
+      <span class="loc-opt-name">${p.name}</span>
+      <span class="loc-opt-avail" style="background:var(--overlay-06);color:var(--cream-4);">${p.sku||''}</span>
+    </div>`).join('');
+}
+
+function selectProdPickerItem(id, productId) {
+  const el = document.getElementById(`ilProd${id}`);
+  if (!el) return;
+  el.value = productId;
+  closeAllProdPickers();
+  updateProdPickerLabel(id);
+  if (typeof onInvoiceProdChange === 'function') onInvoiceProdChange(id);
+}
+
+function updateProdPickerLabel(id) {
+  const btn = document.getElementById(`prodPickerBtn${id}`);
+  const label = document.getElementById(`prodPickerLabel${id}`);
+  if (!btn || !label) return;
+  const pid = parseInt(document.getElementById(`ilProd${id}`)?.value) || 0;
+  const p = (state.products || []).find(x => x.id === pid);
+  if (p) {
+    btn.disabled = false; btn.classList.remove('empty');
+    label.textContent = `${p.name} (${p.sku||''})`;
+  } else {
+    label.textContent = 'اختر المنتج...';
+    btn.classList.add('empty');
+  }
+}
+
+// ═══ نفس منتقي المنتج، بس نسخة مستقلة لبنود أمر الشراء (poProd*) — مفصولة
+// عمداً عن نسخة فاتورة البيع (ilProd/prodPicker) فوق عشان أي تعديل هنا
+// مايقدرش يأثر على منطق فاتورة المبيعات بالغلط، ولإن أمر الشراء بيتعامل مع
+// سعر التكلفة (cost_price) مش سعر البيع (sale_price). ===
+function poProdPickerCellHtml(uid) {
+  return `
+    <div class="loc-picker" id="poProdPicker${uid}">
+      <button type="button" class="form-control loc-picker-btn empty" id="poProdPickerBtn${uid}" onclick="togglePoProdPicker(${uid})">
+        <span class="lp-label" id="poProdPickerLabel${uid}">اختر منتجاً...</span>
+        <svg class="lp-chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <input type="hidden" class="po-item-product" id="poProdField${uid}" value="">
+      <div class="loc-picker-menu prod-picker-menu" id="poProdPickerMenu${uid}" style="display:none;">
+        <div class="prod-picker-search">
+          <input type="text" class="form-control" id="poProdPickerQ${uid}" placeholder="ابحث بالاسم أو الكود..." oninput="renderPoProdPickerMenu(${uid}, this.value)" onclick="event.stopPropagation()" autocomplete="off">
+        </div>
+        <div id="poProdPickerResults${uid}"></div>
+      </div>
+    </div>`;
+}
+
+function togglePoProdPicker(uid) {
+  const menu = document.getElementById(`poProdPickerMenu${uid}`);
+  if (!menu) return;
+  const wasOpen = menu.style.display !== 'none';
+  closeAllProdPickers();
+  closeAllLocPickers();
+  if (!wasOpen) {
+    renderPoProdPickerMenu(uid, '');
+    menu.style.display = 'block';
+    document.getElementById(`poProdPicker${uid}`)?.classList.add('open');
+    const q = document.getElementById(`poProdPickerQ${uid}`);
+    if (q) { q.value = ''; setTimeout(() => q.focus(), 30); }
+  }
+}
+
+function renderPoProdPickerMenu(uid, query) {
+  const box = document.getElementById(`poProdPickerResults${uid}`);
+  if (!box) return;
+  const all = (state.products || []).filter(p => p.is_active);
+  const qRaw = (query || '').trim();
+  let matches;
+  if (!qRaw) {
+    matches = all.slice(0, 40);
+  } else {
+    const qLower = qRaw.toLowerCase();
+    const qNorm = _normCode(qRaw);
+    matches = all.filter(p =>
+      (p.name || '').toLowerCase().includes(qLower) ||
+      (qNorm && _normCode(p.sku).includes(qNorm))
+    ).slice(0, 40);
+  }
+  if (!matches.length) {
+    box.innerHTML = `<div class="loc-opt disabled"><span class="loc-opt-name">لا توجد نتائج مطابقة</span></div>`;
+    return;
+  }
+  const curId = parseInt(document.getElementById(`poProdField${uid}`)?.value) || 0;
+  box.innerHTML = matches.map(p => `
+    <div class="loc-opt ${p.id===curId?'selected':''}" onclick="selectPoProdPickerItem(${uid}, ${p.id})">
+      <span class="loc-opt-name">${p.name}</span>
+      <span class="loc-opt-avail" style="background:var(--overlay-06);color:var(--cream-4);">${p.sku||''}</span>
+    </div>`).join('');
+}
+
+function selectPoProdPickerItem(uid, productId) {
+  const el = document.getElementById(`poProdField${uid}`);
+  if (!el) return;
+  el.value = productId;
+  closeAllProdPickers();
+  updatePoProdPickerLabel(uid);
+  onPOProdChange(uid);
+}
+
+function updatePoProdPickerLabel(uid) {
+  const btn = document.getElementById(`poProdPickerBtn${uid}`);
+  const label = document.getElementById(`poProdPickerLabel${uid}`);
+  if (!btn || !label) return;
+  const pid = parseInt(document.getElementById(`poProdField${uid}`)?.value) || 0;
+  const p = (state.products || []).find(x => x.id === pid);
+  if (p) {
+    btn.classList.remove('empty');
+    label.textContent = `${p.name} (${p.sku||''})`;
+  } else {
+    label.textContent = 'اختر منتجاً...';
+    btn.classList.add('empty');
+  }
+}
+
+// المنتج اتغيّر في بند أمر شراء: نملأ سعر التكلفة تلقائياً من بيانات المنتج (لو موجود)
+function onPOProdChange(uid) {
+  const pid = parseInt(document.getElementById(`poProdField${uid}`)?.value) || 0;
+  const p = (state.products || []).find(x => x.id === pid);
+  const row = document.getElementById(`poProdPicker${uid}`)?.closest('.po-item-card');
+  const costInput = row?.querySelector('.po-item-cost');
+  if (costInput && p && p.cost_price && !costInput.value) costInput.value = p.cost_price;
+  recalcPO();
+}
+
 function locPickerCellHtml(id) {
   return `
     <div class="loc-picker" id="locPicker${id}">
@@ -9848,7 +10081,7 @@ function addInvoiceLine(prefill = null) {
   card.id = `invLine${id}`;
   card.innerHTML = `
     <div class="inv-line-card-top">
-      <select class="form-control" id="ilProd${id}" onchange="onInvoiceProdChange(${id})">${_invoiceProdOptsHtml}</select>
+      ${prodPickerCellHtml(id)}
       <button type="button" class="inv-line-remove-btn" title="حذف البند" onclick="delete _invoiceLineLocation[${id}];document.getElementById('invLine${id}').remove();calcInvoiceTotals();">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
@@ -9878,8 +10111,8 @@ function addInvoiceLine(prefill = null) {
   document.getElementById('invoiceLines').appendChild(card);
 
   if (prefill?.product_id) {
-    const prodSel = document.getElementById(`ilProd${id}`);
-    prodSel.value = prefill.product_id;
+    document.getElementById(`ilProd${id}`).value = prefill.product_id;
+    updateProdPickerLabel(id);
   }
   _invoiceLineLocation[id] = prefill?.location_id || null;
   refreshLocPickerLabel(id);
@@ -9888,9 +10121,9 @@ function addInvoiceLine(prefill = null) {
 }
 
 function onInvoiceProdChange(id) {
-  const sel = document.getElementById(`ilProd${id}`);
-  const price = sel.options[sel.selectedIndex]?.dataset?.price || 0;
-  document.getElementById(`ilPrice${id}`).value = price;
+  const pid = parseInt(document.getElementById(`ilProd${id}`)?.value) || 0;
+  const p = (state.products || []).find(x => x.id === pid);
+  document.getElementById(`ilPrice${id}`).value = p ? (p.sale_price || 0) : 0;
   // المنتج اتغيّر، فالمخزن القديم ممكن ميبقاش له معنى — نمسحه ونطلب اختيار جديد بوضوح
   _invoiceLineLocation[id] = null;
   refreshLocPickerLabel(id);
